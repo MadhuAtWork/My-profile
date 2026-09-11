@@ -69,7 +69,7 @@ export const PORTFOLIO_DATA = {
     role: "React & Frontend Developer",
     subtitle: "React • Next.js • React Native • Flutter • Redux Toolkit",
     statusBadge: "Available for Senior Frontend & React Roles",
-    shortBio: "React Developer with 6 years of experience designing, developing, and maintaining high-performance, scalable web and mobile applications. Specialized in building modern UI with Three.js, React Flow, ECharts, Redux Toolkit, and seamless REST API integrations.",
+    shortBio: "React Developer with 4 years of experience designing, developing, and maintaining high-performance, scalable web and mobile applications. Specialized in building modern UI with Three.js, React Flow, ECharts, Redux Toolkit, and seamless REST API integrations.",
     resumeUrl: "chopparimadhu.dev",
     email: "madhuch155@gmail.com",
     phone: "+91 8501056461",
