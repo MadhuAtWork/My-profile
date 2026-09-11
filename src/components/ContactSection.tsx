@@ -51,9 +51,12 @@ export const ContactSection: React.FC = () => {
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
+          _replyto: formData.email,
           _subject: formData.subject || `Portfolio Message from ${formData.name}`,
           message: formData.message,
+          _captcha: 'false',
           _template: 'table',
+          _autoresponse: `Hi ${formData.name},\n\nThank you for reaching out to Choppari Madhu. I have received your message and will review it promptly.\n\nBest regards,\nChoppari Madhu\nReact & Frontend Developer\nmadhuch155@gmail.com`,
         }),
       });
 
