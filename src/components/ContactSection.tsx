@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, Check, Copy, MessageSquare } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, Check, Copy, MessageSquare, Loader2, ExternalLink, RefreshCw } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { PORTFOLIO_DATA } from '../data/portfolioData';
 import { GithubIcon, LinkedinIcon } from './SocialIcons';
 
 export const ContactSection: React.FC = () => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
@@ -22,22 +23,69 @@ export const ContactSection: React.FC = () => {
     setTimeout(() => setCopiedPhone(false), 2000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleOpenGmail = () => {
+    const subject = encodeURIComponent(formData.subject || 'Portfolio Inquiry');
+    const body = encodeURIComponent(
+      `Hello Madhu,\n\nName: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
+    );
+    window.open(
+      `https://mail.google.com/mail/?view=cm&fs=1&to=${PORTFOLIO_DATA.profile.email}&su=${subject}&body=${body}`,
+      '_blank'
+    );
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) return;
 
-    setSubmitted(true);
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#06b6d4', '#a855f7', '#ec4899', '#10b981'],
-    });
+    setLoading(true);
 
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ name: '', email: '', subject: '', message: '' });
-    }, 4000);
+    try {
+      // 1. Submit to FormSubmit AJAX endpoint for direct inbox delivery
+      const response = await fetch(`https://formsubmit.co/ajax/${PORTFOLIO_DATA.profile.email}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          _subject: formData.subject || `Portfolio Message from ${formData.name}`,
+          message: formData.message,
+          _template: 'table',
+        }),
+      });
+
+      if (!response.ok) {
+        // Fallback to mailto if endpoint fails
+        window.location.href = `mailto:${PORTFOLIO_DATA.profile.email}?subject=${encodeURIComponent(
+          formData.subject || 'Portfolio Inquiry'
+        )}&body=${encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`)}`;
+      }
+    } catch {
+      // Silent network fallback
+      const mailtoUrl = `mailto:${PORTFOLIO_DATA.profile.email}?subject=${encodeURIComponent(
+        formData.subject || 'Portfolio Inquiry'
+      )}&body=${encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`)}`;
+      window.location.href = mailtoUrl;
+    } finally {
+      setLoading(false);
+      setSubmitted(true);
+
+      // Trigger celebration confetti
+      confetti({
+        particleCount: 100,
+        spread: 75,
+        origin: { y: 0.6 },
+        colors: ['#06b6d4', '#a855f7', '#ec4899', '#10b981'],
+      });
+    }
+  };
+
+  const handleResetForm = () => {
+    setSubmitted(false);
+    setFormData({ name: '', email: '', subject: '', message: '' });
   };
 
   return (
@@ -227,10 +275,47 @@ export const ContactSection: React.FC = () => {
                 >
                   <Check size={28} />
                 </div>
-                <h4 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Message Sent!</h4>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-                  Thank you for reaching out. I'll get back to you shortly!
+                <h4 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-main)' }}>
+                  Message Sent Successfully!
+                </h4>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: 1.6, maxWidth: '420px', margin: '0 auto 1.5rem' }}>
+                  Thank you for reaching out, <strong>{formData.name || 'there'}</strong>! Your message has been sent to Choppari Madhu. I will get back to you shortly at <strong>{formData.email}</strong>.
                 </p>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={handleOpenGmail}
+                    className="btn btn-primary"
+                    style={{
+                      padding: '0.6rem 1.2rem',
+                      fontSize: '0.88rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
+                    }}
+                  >
+                    <Mail size={16} />
+                    <span>Open in Gmail</span>
+                    <ExternalLink size={14} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleResetForm}
+                    className="btn btn-secondary"
+                    style={{
+                      padding: '0.6rem 1.2rem',
+                      fontSize: '0.88rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
+                    }}
+                  >
+                    <RefreshCw size={15} />
+                    <span>Send Another Message</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
@@ -280,18 +365,35 @@ export const ContactSection: React.FC = () => {
                     rows={4}
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    placeholder="Hi Andrew, I would love to discuss a developer role at our company..."
+                    placeholder="Hi Madhu, I would love to discuss a developer role at our company..."
                     className="form-textarea"
                   />
                 </div>
 
                 <button
                   type="submit"
+                  disabled={loading}
                   className="btn btn-primary"
-                  style={{ width: '100%', padding: '0.85rem', justifyContent: 'center', marginTop: '0.5rem' }}
+                  style={{
+                    width: '100%',
+                    padding: '0.85rem',
+                    justifyContent: 'center',
+                    marginTop: '0.5rem',
+                    opacity: loading ? 0.75 : 1,
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                  }}
                 >
-                  <Send size={16} />
-                  <span>Send Message</span>
+                  {loading ? (
+                    <>
+                      <Loader2 size={18} className="spin" />
+                      <span>Sending Message...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send size={16} />
+                      <span>Send Message</span>
+                    </>
+                  )}
                 </button>
               </form>
             )}
